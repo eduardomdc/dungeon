@@ -3,10 +3,11 @@ import "core:fmt"
 import steam "../../ext/steamworks"
 import "base:runtime"
 import "core:c"
+import "../core"
 
 listen_socket: steam.HSteamListenSocket
 address : steam.SteamNetworkingIPAddr
-PORT :: 27015
+
 start_steamworks :: proc () {
 	if steam.RestartAppIfNecessary(steam.uAppIdInvalid) {
         fmt.println("Launching app through steam...")
@@ -30,7 +31,7 @@ start_steamworks :: proc () {
     }
 
 	steam.NetworkingIPAddr_Clear(&address)
-	address.port = PORT
+	address.port = core.PORT
 	listen_socket = steam.NetworkingSockets_CreateListenSocketIP(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
 }
 

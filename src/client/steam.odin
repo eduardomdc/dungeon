@@ -3,12 +3,11 @@ import "core:fmt"
 import steam "../../ext/steamworks"
 import "base:runtime"
 import "core:c"
+import "../core"
 
-connection : steam.HSteamNetConnection
-address : steam.SteamNetworkingIPAddr
-PORT :: 27015
+LOCAL_SERVER_IP :: 0x7F000001 // 127.0.0.1
 
-start_steamworks :: proc () {
+start_steamworks :: proc (client : ^Client) {
 	if steam.RestartAppIfNecessary(steam.uAppIdInvalid) {
         fmt.println("Launching app through steam...")
         return
@@ -30,9 +29,10 @@ start_steamworks :: proc () {
         fmt.println("USER IS LOGGED IN")
     }
 
+	address : steam.SteamNetworkingIPAddr
 	steam.NetworkingIPAddr_Clear(&address)
-	steam.NetworkingIPAddr_SetIPv4(&address, 0x7F000001, PORT)// 127.0.0.1
-	connection = steam.NetworkingSockets_ConnectByIPAddress(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
+	steam.NetworkingIPAddr_SetIPv4(&address, LOCAL_SERVER_IP, core.PORT)
+	client.server_connection = steam.NetworkingSockets_ConnectByIPAddress(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
 }
 
 steam_debug_text_hook :: proc "c" (severity: c.int, debugText: cstring) {
@@ -45,7 +45,7 @@ steam_debug_text_hook :: proc "c" (severity: c.int, debugText: cstring) {
     }
 }
 
-steam_callbacks :: proc() {
+steam_callbacks :: proc (client : ^Client) {
     steam_pipe := steam.GetHSteamPipe()
     steam.ManualDispatch_RunFrame(steam_pipe)
     cb: steam.CallbackMsg
@@ -55,10 +55,14 @@ steam_callbacks :: proc() {
 		case .SteamNetConnectionStatusChangedCallback:
 			event := transmute(^steam.SteamNetConnectionStatusChangedCallback)cb.pubParam
 			#partial switch event.info.eState {
+			case .Connecting:
+				fmt.println("Connecting to server...")
             case .Connected:
-                fmt.println("Client connected: ", event.hConn)
+                fmt.println("Connected to server")
+				client.connected_to_server = true
             case .ClosedByPeer, .ProblemDetectedLocally:
-                fmt.println("Client disconnected: ", event.hConn)
+                fmt.println("Disconnected from server")
+				client.connected_to_server = false
                 steam.NetworkingSockets_CloseConnection(steam.NetworkingSockets_SteamAPI(), event.hConn, 0, nil, false)
             }
 		}
