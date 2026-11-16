@@ -13,6 +13,7 @@ Server :: struct {
 	connections : map[steam.HSteamNetConnection]Connection,
 	network_tick : time.Time,
 	poll_group : steam.HSteamNetPollGroup,
+	listen_socket: steam.HSteamListenSocket
 }
 
 Connection :: struct {}
