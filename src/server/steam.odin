@@ -8,7 +8,7 @@ import "../core"
 listen_socket: steam.HSteamListenSocket
 address : steam.SteamNetworkingIPAddr
 
-start_steamworks :: proc () {
+start_steamworks :: proc (server : ^Server) {
 	if steam.RestartAppIfNecessary(steam.uAppIdInvalid) {
         fmt.println("Launching app through steam...")
         return
@@ -33,6 +33,8 @@ start_steamworks :: proc () {
 	steam.NetworkingIPAddr_Clear(&address)
 	address.port = core.PORT
 	listen_socket = steam.NetworkingSockets_CreateListenSocketIP(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
+
+	server.poll_group = steam.NetworkingSockets_CreatePollGroup(steam.NetworkingSockets_SteamAPI())
 }
 
 steam_debug_text_hook :: proc "c" (severity: c.int, debugText: cstring) {
@@ -46,8 +48,6 @@ steam_debug_text_hook :: proc "c" (severity: c.int, debugText: cstring) {
 }
 
 steam_callbacks :: proc(server : ^Server) {
-    temp_mem := make([dynamic]byte, context.temp_allocator)
-
     steam_pipe := steam.GetHSteamPipe()
     steam.ManualDispatch_RunFrame(steam_pipe)
     cb: steam.CallbackMsg
@@ -63,12 +63,12 @@ steam_callbacks :: proc(server : ^Server) {
                 	result := steam.NetworkingSockets_AcceptConnection(steam.NetworkingSockets_SteamAPI(), event.hConn)
 					if result == .OK {
 						fmt.println("Accept connection: ", result)
-
 					}
                 }
             case .Connected:
                 fmt.println("Client connected: ", event.hConn)
 				server.connections[event.hConn] = {}
+				steam.NetworkingSockets_SetConnectionPollGroup(steam.NetworkingSockets_SteamAPI(), event.hConn, server.poll_group)
             case .ClosedByPeer, .ProblemDetectedLocally:
                 fmt.println("Client disconnected: ", event.hConn)
                 steam.NetworkingSockets_CloseConnection(steam.NetworkingSockets_SteamAPI(), event.hConn, 0, nil, false)

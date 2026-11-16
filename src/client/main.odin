@@ -26,6 +26,7 @@ main :: proc () {
 	init_camera(C)
 	for ; !rl.WindowShouldClose() ; {
 		steam_callbacks(C)
+		poll_msgs(C)
 		render(C^)
 		input(C)
 	}
@@ -62,7 +63,7 @@ get_directional_input :: proc () -> (dir : core.Vec2){
 	if rl.IsKeyDown(.S) do dir += core.Vec2{0,-1}
 	if rl.IsKeyDown(.A) do dir += core.Vec2{-1,0}
 	if rl.IsKeyDown(.D) do dir += core.Vec2{1,0}
-	dir = linalg.normalize(dir)
+	if dir != {} do dir = linalg.normalize(dir)
 	return
 }
 
@@ -71,4 +72,28 @@ send_msg :: proc (client : ^Client, msg : core.Msg) {
 	serialized, err := core.serialize_msg(msg, context.allocator); defer delete(serialized)
 	if err != nil do panic(fmt.tprint("Msg serialization error :", err))
 	steam.NetworkingSockets_SendMessageToConnection(steam.NetworkingSockets_SteamAPI(), client.server_connection, raw_data(serialized), u32(len(serialized)), steam.nSteamNetworkingSend_Unreliable, nil)
+}
+
+poll_msgs :: proc (client : ^Client) {
+	if !client.connected_to_server do return
+	MAX_MSGS :: 64
+	messages : [MAX_MSGS]^steam.SteamNetworkingMessage
+	received_count := steam.NetworkingSockets_ReceiveMessagesOnConnection(steam.NetworkingSockets_SteamAPI(), client.server_connection, &messages[0], MAX_MSGS)
+	for i in 0..<received_count {
+		message := messages[i]
+		defer steam.NetworkingMessage_t_Release(message)
+		data_ptr := cast([^]u8)message^.pData
+        data := data_ptr[:message^.cbSize]
+		msg, err := core.deserialize_msg(data, context.temp_allocator)
+		if err != nil {fmt.println("Failed to deserialize msg"); continue}
+		handle_msg(client, msg)
+	}
+}
+
+handle_msg :: proc (client : ^Client, msg : core.Msg) {
+	switch m in msg {
+	case core.MsgMoveActor:
+	case core.MsgGameState:
+		client.game_state = m.state
+	}
 }

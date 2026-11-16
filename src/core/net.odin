@@ -30,7 +30,7 @@ serialize_msg :: proc(msg: Msg, allocator : mem.Allocator) -> (data: []byte, err
 }
 
 @require_results
-unserialize_msg :: proc(data: []byte, allocator : mem.Allocator) -> (msg: Msg, err: cbor.Unmarshal_Error) {
+deserialize_msg :: proc(data: []byte, allocator : mem.Allocator) -> (msg: Msg, err: cbor.Unmarshal_Error) {
 	err = cbor.unmarshal(transmute(string)data, &msg, allocator = allocator)
 	return
 }
