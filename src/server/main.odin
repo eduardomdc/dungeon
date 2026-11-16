@@ -6,7 +6,7 @@ import "core:fmt"
 
 S : ^Server
 SERVER_TICK_RATE :: 20 // Hz
-SERVER_TICK_PERIOD : f64 : 1000/SERVER_TICK_RATE // ms
+SERVER_TICK_PERIOD : time.Duration : 1000*time.Millisecond/SERVER_TICK_RATE // ms
 
 Server :: struct {
 	game_state : core.GameState,
@@ -27,6 +27,7 @@ main :: proc () {
 		steam_callbacks(S)
 		network_tick(S)
 		free_all(context.temp_allocator)
+		time.sleep(SERVER_TICK_PERIOD-time.since(S.network_tick))
 	}
 
 	steam.Shutdown()
@@ -38,7 +39,7 @@ network_init :: proc (server : ^Server) {
 
 network_tick :: proc (server : ^Server) {
 	since_last_tick := time.since(server.network_tick)
-	if time.duration_milliseconds(since_last_tick) < SERVER_TICK_PERIOD do return
+	if since_last_tick < SERVER_TICK_PERIOD do return
 	server.network_tick = time.now()
 	MAX_MSGS :: 256
 	messages: [MAX_MSGS]^steam.SteamNetworkingMessage
