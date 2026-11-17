@@ -8,6 +8,8 @@ fi
 target="$1"
 shift
 
+#teste
+
 # Default to debug builds; select the mode immediately after the target.
 build_flags=(-debug -o:none)
 case "${1:-}" in
