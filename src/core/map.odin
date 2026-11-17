@@ -11,6 +11,13 @@ Tile :: struct {
 	type : TileType,
 }
 
-TileType :: enum {
+TileType :: enum u8 {
+	None,
 	StoneBricks,
+}
+
+// this will only be used by future map editor basically
+add_tile :: proc (game_map : ^GameMap, tile : Tile) {
+	game_map.tiles[game_map.tile_count] = tile // later check if there's a tile already
+	game_map.tile_count += 1
 }

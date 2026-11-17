@@ -12,3 +12,14 @@ state_update :: proc (state : ^WorldState, player_inputs : []MsgPlayerInput) {
 		state.game_state.player_pos.xy += BALL_SPEED*f32(input.duration_msec)/1000 * input.input_dir
 	}
 }
+
+// testing map init
+core_init :: proc (state : ^WorldState) {
+	gm := &state.game_map
+	for x:MapVec = 0; x < 10; x+=1 {
+		for y:MapVec = 0; y < 10; y+=1 {
+			tile := Tile{{x,y,0}, .StoneBricks}
+			add_tile(gm, tile)
+		}
+	}
+}

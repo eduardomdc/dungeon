@@ -27,6 +27,7 @@ main :: proc () {
 	rl.InitWindow(RES.x, RES.y, "Dungeon")
 	rl.SetTargetFPS(FPS)
 	init_camera(C)
+	core.core_init(&C.world_state)
 	for ; !rl.WindowShouldClose() ; {
 		C.frame_start = time.now()
 		steam_callbacks(C)
@@ -54,6 +55,7 @@ render :: proc (client : Client) {
 	rl.DrawFPS(2, 2)
 	rl.BeginMode3D(client.camera)
 		rl.DrawSphere(client.world_state.game_state.player_pos, 1, rl.BLUE)
+		render_map(client)
 	rl.EndMode3D()
 	rl.EndDrawing()
 }
