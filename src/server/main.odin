@@ -9,7 +9,7 @@ SERVER_TICK_RATE :: 20 // Hz
 SERVER_TICK_PERIOD : time.Duration : 1000*time.Millisecond/SERVER_TICK_RATE // ms
 
 Server :: struct {
-	game_state : core.GameState,
+	world_state : core.WorldState,
 	connections : map[steam.HSteamNetConnection]Connection,
 	network_tick : time.Time,
 	poll_group : steam.HSteamNetPollGroup,
@@ -66,11 +66,11 @@ handle_msg :: proc (server : ^Server, msg : core.Msg) {
 	case core.MsgGameState:
 
 	}
-	core.state_update(&server.game_state, input_msgs[:])
+	core.state_update(&server.world_state, input_msgs[:])
 }
 
 broadcast_GameState :: proc (server : ^Server) {
-	msg_bytes, err := core.serialize_msg(core.MsgGameState{server.game_state}, context.temp_allocator)
+	msg_bytes, err := core.serialize_msg(core.MsgGameState{server.world_state.game_state}, context.temp_allocator)
 	for connection in server.connections {
 		steam.NetworkingSockets_SendMessageToConnection(steam.NetworkingSockets_SteamAPI(), connection, raw_data(msg_bytes), u32(len(msg_bytes)), steam.nSteamNetworkingSend_Unreliable, nil)
 	}
