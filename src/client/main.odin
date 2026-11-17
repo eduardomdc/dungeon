@@ -35,6 +35,7 @@ main :: proc () {
 		input(C)
 		render(C^)
 		C.frame_time = time.since(C.frame_start)
+		C.camera.target = C.world_state.game_state.player_pos
 	}
 	steam.Shutdown()
 }
