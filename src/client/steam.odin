@@ -28,6 +28,7 @@ start_steamworks :: proc (client : ^Client) {
     } else {
         fmt.println("USER IS LOGGED IN")
     }
+	client.steam_id = steam.User_GetSteamID(steam.User())	
 
 	address : steam.SteamNetworkingIPAddr
 	steam.NetworkingIPAddr_Clear(&address)

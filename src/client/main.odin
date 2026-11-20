@@ -12,6 +12,8 @@ FPS :: 120
 
 Client :: struct {
 	world_state : core.WorldState,
+	player_id : core.PlayerID,
+	steam_id : steam.CSteamID,
 	camera : rl.Camera3D,
 	server_connection : steam.HSteamNetConnection,
 	connected_to_server : bool,
@@ -35,7 +37,7 @@ main :: proc () {
 		input(C)
 		render(C^)
 		C.frame_time = time.since(C.frame_start)
-		C.camera.target = C.world_state.game_state.player_pos
+		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[core.player_idx(C.player_id)].position
 	}
 	steam.Shutdown()
 }
@@ -55,7 +57,10 @@ render :: proc (client : Client) {
 	rl.ClearBackground(rl.BLACK)
 	rl.DrawFPS(2, 2)
 	rl.BeginMode3D(client.camera)
-		rl.DrawSphere(client.world_state.game_state.player_pos, 1, rl.BLUE)
+		for player in client.world_state.game_state.players {
+			if player.id == 0 do continue
+			rl.DrawSphere(player.position, 1, rl.BLUE)
+		}
 		render_map(client)
 	rl.EndMode3D()
 	rl.EndDrawing()
@@ -64,8 +69,9 @@ render :: proc (client : Client) {
 input :: proc (client : ^Client) {
 	dir := get_directional_input()
 	frame_dt := u16(time.duration_milliseconds(client.frame_time))
-	inputs := [1]core.MsgPlayerInput{core.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}}
-	if dir != {} do send_msg(client, inputs[0])
+	input_msg := core.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
+	if dir != {} do send_msg(client, input_msg)
+	inputs := [1]core.PlayerInput{ {client.player_id, input_msg} }
 	// simulate
 	core.state_update(&client.world_state, inputs[:])
 }
@@ -107,5 +113,8 @@ handle_msg :: proc (client : ^Client, msg : core.Msg) {
 	case core.MsgPlayerInput:
 	case core.MsgGameState:
 		client.world_state.game_state = m.state
+	case core.MsgPlayerJoined:
+	case core.MsgClientHandshake:
+		client.player_id = m.player_id
 	}
 }

@@ -1,6 +1,7 @@
 package core
 import "core:encoding/cbor"
 import "core:mem"
+import steam "../../ext/steamworks"
 
 PORT :: 27015
 MsgHeaderSize :: u8
@@ -14,6 +15,8 @@ MsgType :: enum MsgHeaderSize {
 Msg :: union {
 	MsgPlayerInput,
 	MsgGameState,
+	MsgPlayerJoined,
+	MsgClientHandshake,
 }
 
 MsgPlayerInput :: struct {
@@ -22,8 +25,22 @@ MsgPlayerInput :: struct {
 	looking: Vec3,
 }
 
+PlayerInput :: struct {
+	player_id : PlayerID,
+	msg : MsgPlayerInput,
+}
+
 MsgGameState :: struct {
 	state: GameState,
+}
+
+MsgPlayerJoined :: struct {
+	steam_id : steam.CSteamID,
+	player_id : PlayerID,
+}
+
+MsgClientHandshake :: struct { // sent only to the connecting client so that it knows what is its' player id
+	player_id : PlayerID,
 }
 
 @require_results

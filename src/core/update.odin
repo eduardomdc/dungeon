@@ -6,10 +6,12 @@ package core
 // events need unique ids so clients dont replicate duplicated events ?
 // actually lets test client ignores events that are related to their character (start attack) but doesnt ignore or tries to
 // predict authorative events (player takes damage, other player starts attack)
-state_update :: proc (state : ^WorldState, player_inputs : []MsgPlayerInput) {
+state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
 	BALL_SPEED :: 20
 	for input in player_inputs {
-		state.game_state.player_pos.xy += BALL_SPEED*f32(input.duration_msec)/1000 * input.input_dir
+		if input.player_id == 0 do continue
+		player := &state.game_state.players[player_idx(input.player_id)]
+		player.position.xy += BALL_SPEED*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
 	}
 }
 

@@ -65,8 +65,18 @@ steam_callbacks :: proc(server : ^Server) {
                 }
             case .Connected:
                 fmt.println("Client connected: ", event.hConn)
-				server.connections[event.hConn] = {}
+				
+				info : steam.SteamNetConnectionInfo
+				success := steam.NetworkingSockets_GetConnectionInfo(steam.NetworkingSockets_SteamAPI(), event.hConn, &info)
+				if !success do break
+				if info.identityRemote.eType != .SteamID do break // only steamers allowed
+				steam_id := steam.NetworkingIdentity_GetSteamID(&info.identityRemote)
+				player_id := player_join(server)
+				if player_id == 0 do break // max players
+				server.connections[event.hConn] = {steam_id, player_id}
 				steam.NetworkingSockets_SetConnectionPollGroup(steam.NetworkingSockets_SteamAPI(), event.hConn, server.poll_group)
+				send_reliable_msg(server, core.MsgClientHandshake{player_id}, event.hConn)	
+				broadcast_reliable_msg(server, core.MsgPlayerJoined{steam_id, player_id})
             case .ClosedByPeer, .ProblemDetectedLocally:
                 fmt.println("Client disconnected: ", event.hConn)
                 steam.NetworkingSockets_CloseConnection(steam.NetworkingSockets_SteamAPI(), event.hConn, 0, nil, false)
