@@ -52,20 +52,6 @@ init_camera :: proc (client : ^Client) {
 	}
 }
 
-render :: proc (client : Client) {
-	rl.BeginDrawing()
-	rl.ClearBackground(rl.BLACK)
-	rl.DrawFPS(2, 2)
-	rl.BeginMode3D(client.camera)
-		for player in client.world_state.game_state.players {
-			if player.id == 0 do continue
-			rl.DrawSphere(player.position, 1, rl.BLUE)
-		}
-		render_map(client)
-	rl.EndMode3D()
-	rl.EndDrawing()
-}
-
 input :: proc (client : ^Client) {
 	dir := get_directional_input()
 	frame_dt := u16(time.duration_milliseconds(client.frame_time))

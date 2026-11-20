@@ -66,7 +66,7 @@ broadcast_reliable_msg :: proc (server : ^Server, msg : core.Msg) {
 player_join :: proc (server : ^Server) -> core.PlayerID {
 	free_player_id : core.PlayerID
 	for player, idx in server.world_state.game_state.players {
-		if player.id == 0 do free_player_id = core.player_id(idx)
+		if player.id == 0 { free_player_id = core.player_id(idx); break }
 	}
 	if free_player_id == 0 do return 0 // no free slot, max players reached
 	server.world_state.game_state.players[core.player_idx(free_player_id)] = core.Player{free_player_id, {}}
