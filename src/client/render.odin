@@ -12,7 +12,7 @@ render :: proc (client : Client) {
 	rl.BeginMode3D(client.camera)
 		for player in client.world_state.game_state.players {
 			if player.id == 0 do continue
-			rl.DrawSphere(player.position, 1, PLAYER_COLORS[core.player_idx(player.id)])
+			rl.DrawSphere(player.position, 0.5, PLAYER_COLORS[core.player_idx(player.id)])
 		}
 		render_map(client)
 	rl.EndMode3D()
@@ -24,12 +24,17 @@ tile_center :: proc (map_pos : [3]core.MapVec) -> rl.Vector3 {
 }
 
 render_map :: proc (client : Client) {
-	render_tiles(client.world_state.game_map)
+	render_tiles(client)
 }
 
-render_tiles :: proc (game_map : core.GameMap) {
-	for i:u16=0; i<game_map.tile_count; i+=1 {
-		tile := game_map.tiles[i]
-		rl.DrawCube(tile_center(tile.position), 0.5, 0.5, 0.5, rl.GRAY)
+render_tiles :: proc (client : Client) {
+	for i:u16=0; i< client.world_state.game_map.tile_count; i+=1 {
+		tile := client.world_state.game_map.tiles[i]
+		draw_tile(client, tile.position, tile.type)
+	}
+	draw_tile :: proc (client : Client, pos : core.TilePos, tile : core.TileType) {
+		wpos := tile_center(pos)
+		transform := rl.MatrixTranslate(wpos.x, wpos.y, wpos.z)
+		rl.DrawMesh(client.assets.cube_mesh, client.assets.tile_materials[tile], transform)
 	}
 }

@@ -12,13 +12,14 @@ FPS :: 120
 
 Client :: struct {
 	world_state : core.WorldState,
+	assets : Assets,
 	player_id : core.PlayerID,
 	steam_id : steam.CSteamID,
 	camera : rl.Camera3D,
 	server_connection : steam.HSteamNetConnection,
 	connected_to_server : bool,
-	frame_start : time.Time,
-	frame_time : time.Duration,
+	last_frame_time : time.Time,
+	dt : time.Duration,
 }
 
 C : ^Client
@@ -28,15 +29,18 @@ main :: proc () {
 	start_steamworks(C)
 	rl.InitWindow(RES.x, RES.y, "Dungeon")
 	rl.SetTargetFPS(FPS)
+	load_assets(C)
 	init_camera(C)
 	core.core_init(&C.world_state)
+	C.last_frame_time = time.now()
 	for ; !rl.WindowShouldClose() ; {
-		C.frame_start = time.now()
+		now := time.now()
+		C.dt = time.diff(C.last_frame_time, now)
+		C.last_frame_time = now
 		steam_callbacks(C)
 		poll_msgs(C)
 		input(C)
 		render(C^)
-		C.frame_time = time.since(C.frame_start)
 		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[core.player_idx(C.player_id)].position
 	}
 	steam.Shutdown()
@@ -54,7 +58,7 @@ init_camera :: proc (client : ^Client) {
 
 input :: proc (client : ^Client) {
 	dir := get_directional_input()
-	frame_dt := u16(time.duration_milliseconds(client.frame_time))
+	frame_dt := u16(time.duration_milliseconds(client.dt))
 	input_msg := core.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
 	if dir != {} do send_msg(client, input_msg)
 	inputs := [1]core.PlayerInput{ {client.player_id, input_msg} }

@@ -69,6 +69,6 @@ player_join :: proc (server : ^Server) -> core.PlayerID {
 		if player.id == 0 { free_player_id = core.player_id(idx); break }
 	}
 	if free_player_id == 0 do return 0 // no free slot, max players reached
-	server.world_state.game_state.players[core.player_idx(free_player_id)] = core.Player{free_player_id, {}}
+	server.world_state.game_state.players[core.player_idx(free_player_id)] = core.Player{free_player_id, {0,0,2}}
 	return free_player_id
 }
