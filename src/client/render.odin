@@ -19,9 +19,6 @@ render :: proc (client : Client) {
 	rl.EndDrawing()
 }
 
-tile_center :: proc (map_pos : [3]core.MapVec) -> rl.Vector3 {
-	return {f32(map_pos.x)+0.5, f32(map_pos.y)+0.5, f32(map_pos.z)+0.5}
-}
 
 render_map :: proc (client : Client) {
 	render_tiles(client)
@@ -33,7 +30,7 @@ render_tiles :: proc (client : Client) {
 		draw_tile(client, tile.position, tile.type)
 	}
 	draw_tile :: proc (client : Client, pos : core.TilePos, tile : core.TileType) {
-		wpos := tile_center(pos)
+		wpos := core.tile_center(pos)
 		transform := rl.MatrixTranslate(wpos.x, wpos.y, wpos.z)
 		rl.DrawMesh(client.assets.cube_mesh, client.assets.tile_materials[tile], transform)
 	}

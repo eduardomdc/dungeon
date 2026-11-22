@@ -1,4 +1,5 @@
 package core
+import box "vendor:box3d"
 
 // game_state_update :: proc (game_state, player_inputs) -> events
 // then send game state to all connections unreliably
@@ -17,6 +18,9 @@ state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
 
 // testing map init
 core_init :: proc (state : ^WorldState) {
+	pworld := box.DefaultWorldDef()
+	state.physics_world.world_id = box.CreateWorld(pworld)
+
 	gm := &state.game_map
 	for x:MapVec = 0; x < 20; x+=1 {
 		for y:MapVec = 0; y < 20; y+=1 {
@@ -34,4 +38,5 @@ core_init :: proc (state : ^WorldState) {
 			add_tile(gm, Tile{{19,y,z}, .StoneBricks})
 		}
 	}
+	generate_tile_colliders(&state.game_map, &state.physics_world)
 }
