@@ -8,16 +8,9 @@ import box "vendor:box3d"
 // actually lets test client ignores events that are related to their character (start attack) but doesnt ignore or tries to
 // predict authorative events (player takes damage, other player starts attack)
 state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
-	BALL_SPEED :: 20
 	for input in player_inputs {
 		if input.player_id == 0 do continue
-		player := &state.game_state.players[player_idx(input.player_id)]
-		trans_xy := BALL_SPEED*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
-		translation : Vec3 = {trans_xy.x, trans_xy.y, 0}
-		filter := box.DefaultQueryFilter()
-		mover := box.Capsule{{0,0,0}, {0,0,PLAYER_CAPSULE_HEIGHT}, PLAYER_CAPSULE_RADIUS}
-		moved := box.World_CastMover(state.physics_world.id, player.position, mover, translation, filter, {}, nil)
-		player.position += moved*translation
+		move_player(state, input.player_id, input)
 	}
 }
 

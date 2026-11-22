@@ -12,7 +12,7 @@ render :: proc (client : Client) {
 	rl.BeginMode3D(client.camera)
 		for player in client.world_state.game_state.players {
 			if player.id == 0 do continue
-			rl.DrawSphere(player.position, 0.5, PLAYER_COLORS[game.player_idx(player.id)])
+			rl.DrawCapsule(player.position, player.position + {0,0,game.PLAYER_CAPSULE_HEIGHT}, game.PLAYER_CAPSULE_RADIUS, 10, 10, PLAYER_COLORS[game.player_idx(player.id)])
 		}
 		render_map(client)
 	rl.EndMode3D()
