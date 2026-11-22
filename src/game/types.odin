@@ -26,7 +26,13 @@ Player :: struct {
 }
 
 PhysicsWorld :: struct {
-	world_id : b3d.WorldId,
+	id : b3d.WorldId,
+	player_phiscs : [MAX_PLAYERS]PlayerPhysics,
+}
+
+PlayerPhysics :: struct {
+	id : PlayerID,
+	body_id : b3d.BodyId,
 }
 
 WorldState :: struct {

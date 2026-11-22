@@ -12,14 +12,19 @@ state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
 	for input in player_inputs {
 		if input.player_id == 0 do continue
 		player := &state.game_state.players[player_idx(input.player_id)]
-		player.position.xy += BALL_SPEED*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
+		trans_xy := BALL_SPEED*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
+		translation : Vec3 = {trans_xy.x, trans_xy.y, 0}
+		filter := box.DefaultQueryFilter()
+		mover := box.Capsule{{0,0,0}, {0,0,PLAYER_CAPSULE_HEIGHT}, PLAYER_CAPSULE_RADIUS}
+		moved := box.World_CastMover(state.physics_world.id, player.position, mover, translation, filter, {}, nil)
+		player.position += moved*translation
 	}
 }
 
 // testing map init
 game_init :: proc (state : ^WorldState) {
 	pworld := box.DefaultWorldDef()
-	state.physics_world.world_id = box.CreateWorld(pworld)
+	state.physics_world.id = box.CreateWorld(pworld)
 
 	gm := &state.game_map
 	for x:MapVec = 0; x < 20; x+=1 {

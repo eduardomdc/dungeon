@@ -62,13 +62,3 @@ broadcast_reliable_msg :: proc (server : ^Server, msg : game.Msg) {
 		steam.NetworkingSockets_SendMessageToConnection(steam.NetworkingSockets_SteamAPI(), connection, raw_data(msg_bytes), u32(len(msg_bytes)), steam.nSteamNetworkingSend_Reliable, nil)
 	}
 }
-
-player_join :: proc (server : ^Server) -> game.PlayerID {
-	free_player_id : game.PlayerID
-	for player, idx in server.world_state.game_state.players {
-		if player.id == 0 { free_player_id = game.player_id(idx); break }
-	}
-	if free_player_id == 0 do return 0 // no free slot, max players reached
-	server.world_state.game_state.players[game.player_idx(free_player_id)] = game.Player{free_player_id, {0,0,2}}
-	return free_player_id
-}

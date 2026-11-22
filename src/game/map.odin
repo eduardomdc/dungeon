@@ -31,8 +31,9 @@ generate_tile_colliders :: proc (game_map  : ^GameMap, p_world : ^PhysicsWorld) 
 		if tile.type == .None do continue
 		box_h := box3d.MakeBoxHull(0.5, 0.5, 0.5)
 		body := box3d.DefaultBodyDef()
+		body.type = .staticBody
 		body.position = tile_center(tile.position)
-		body_id := box3d.CreateBody(p_world.world_id, body)
+		body_id := box3d.CreateBody(p_world.id, body)
 		shape := box3d.DefaultShapeDef()
 		shape_id := box3d.CreateHullShape(body_id, shape, &box_h.base)
 	}

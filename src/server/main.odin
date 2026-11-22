@@ -20,7 +20,8 @@ main :: proc () {
 
 	start_steamworks(S)
 	network_init(S)
-	
+	game.game_init(&S.world_state)
+
 	for ; true ; {
 		steam_callbacks(S)
 		network_tick(S)

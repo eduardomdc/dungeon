@@ -71,7 +71,7 @@ steam_callbacks :: proc(server : ^Server) {
 				if !success do break
 				if info.identityRemote.eType != .SteamID do break // only steamers allowed
 				steam_id := steam.NetworkingIdentity_GetSteamID(&info.identityRemote)
-				player_id := player_join(server)
+				player_id := game.create_player(&server.world_state)
 				if player_id == 0 do break // max players
 				server.connections[event.hConn] = {steam_id, player_id}
 				steam.NetworkingSockets_SetConnectionPollGroup(steam.NetworkingSockets_SteamAPI(), event.hConn, server.poll_group)
