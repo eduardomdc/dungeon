@@ -18,10 +18,20 @@ state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
 // testing map init
 core_init :: proc (state : ^WorldState) {
 	gm := &state.game_map
-	for x:MapVec = 0; x < 10; x+=1 {
-		for y:MapVec = 0; y < 10; y+=1 {
-			tile := Tile{{x,y,0}, .StoneBricks}
+	for x:MapVec = 0; x < 20; x+=1 {
+		for y:MapVec = 0; y < 20; y+=1 {
+			tile := Tile{{x,y,0}, .BasicBlock}
 			add_tile(gm, tile)
+		}
+	}
+	for z:MapVec = 1; z <= 2; z+=1 {
+		for x:MapVec = 0; x < 20; x+=1 {
+			add_tile(gm, Tile{{x,0,z}, .StoneBricks})
+			add_tile(gm, Tile{{x,19,z}, .StoneBricks})
+		}
+		for y:MapVec = 1; y < 19; y+=1 {
+			add_tile(gm, Tile{{0,y,z}, .StoneBricks})
+			add_tile(gm, Tile{{19,y,z}, .StoneBricks})
 		}
 	}
 }

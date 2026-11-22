@@ -14,6 +14,7 @@ Tile :: struct {
 TileType :: enum u8 {
 	None,
 	StoneBricks,
+	BasicBlock,
 }
 
 // this will only be used by future map editor basically
