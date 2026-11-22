@@ -3,7 +3,7 @@ import "core:fmt"
 import steam "../../ext/steamworks"
 import "base:runtime"
 import "core:c"
-import "../core"
+import "../game"
 
 start_steamworks :: proc (server : ^Server) {
 	if steam.RestartAppIfNecessary(steam.uAppIdInvalid) {
@@ -29,7 +29,7 @@ start_steamworks :: proc (server : ^Server) {
 
 	address : steam.SteamNetworkingIPAddr
 	steam.NetworkingIPAddr_Clear(&address)
-	address.port = core.PORT
+	address.port = game.PORT
 	server.listen_socket = steam.NetworkingSockets_CreateListenSocketIP(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
 
 	server.poll_group = steam.NetworkingSockets_CreatePollGroup(steam.NetworkingSockets_SteamAPI())
@@ -75,8 +75,8 @@ steam_callbacks :: proc(server : ^Server) {
 				if player_id == 0 do break // max players
 				server.connections[event.hConn] = {steam_id, player_id}
 				steam.NetworkingSockets_SetConnectionPollGroup(steam.NetworkingSockets_SteamAPI(), event.hConn, server.poll_group)
-				send_reliable_msg(server, core.MsgClientHandshake{player_id}, event.hConn)	
-				broadcast_reliable_msg(server, core.MsgPlayerJoined{steam_id, player_id})
+				send_reliable_msg(server, game.MsgClientHandshake{player_id}, event.hConn)	
+				broadcast_reliable_msg(server, game.MsgPlayerJoined{steam_id, player_id})
             case .ClosedByPeer, .ProblemDetectedLocally:
                 fmt.println("Client disconnected: ", event.hConn)
                 steam.NetworkingSockets_CloseConnection(steam.NetworkingSockets_SteamAPI(), event.hConn, 0, nil, false)

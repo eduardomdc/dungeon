@@ -3,7 +3,7 @@ import "core:fmt"
 import steam "../../ext/steamworks"
 import "base:runtime"
 import "core:c"
-import "../core"
+import "../game"
 
 LOCAL_SERVER_IP :: 0x7F000001 // 127.0.0.1
 
@@ -32,7 +32,7 @@ start_steamworks :: proc (client : ^Client) {
 
 	address : steam.SteamNetworkingIPAddr
 	steam.NetworkingIPAddr_Clear(&address)
-	steam.NetworkingIPAddr_SetIPv4(&address, LOCAL_SERVER_IP, core.PORT)
+	steam.NetworkingIPAddr_SetIPv4(&address, LOCAL_SERVER_IP, game.PORT)
 	client.server_connection = steam.NetworkingSockets_ConnectByIPAddress(steam.NetworkingSockets_SteamAPI(), &address, 0, nil)
 }
 

@@ -1,4 +1,4 @@
-package core
+package game
 import "core:encoding/cbor"
 import "core:mem"
 import steam "../../ext/steamworks"

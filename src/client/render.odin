@@ -1,9 +1,9 @@
 package client
 import rl "vendor:raylib"
-import "../core"
+import "../game"
 
 @rodata
-PLAYER_COLORS : [core.MAX_PLAYERS]rl.Color = {rl.RED, rl.BLUE, rl.GREEN, rl.YELLOW, rl.WHITE, rl.BROWN}
+PLAYER_COLORS : [game.MAX_PLAYERS]rl.Color = {rl.RED, rl.BLUE, rl.GREEN, rl.YELLOW, rl.WHITE, rl.BROWN}
 
 render :: proc (client : Client) {
 	rl.BeginDrawing()
@@ -12,7 +12,7 @@ render :: proc (client : Client) {
 	rl.BeginMode3D(client.camera)
 		for player in client.world_state.game_state.players {
 			if player.id == 0 do continue
-			rl.DrawSphere(player.position, 0.5, PLAYER_COLORS[core.player_idx(player.id)])
+			rl.DrawSphere(player.position, 0.5, PLAYER_COLORS[game.player_idx(player.id)])
 		}
 		render_map(client)
 	rl.EndMode3D()
@@ -29,8 +29,8 @@ render_tiles :: proc (client : Client) {
 		tile := client.world_state.game_map.tiles[i]
 		draw_tile(client, tile.position, tile.type)
 	}
-	draw_tile :: proc (client : Client, pos : core.TilePos, tile : core.TileType) {
-		wpos := core.tile_center(pos)
+	draw_tile :: proc (client : Client, pos : game.TilePos, tile : game.TileType) {
+		wpos := game.tile_center(pos)
 		transform := rl.MatrixTranslate(wpos.x, wpos.y, wpos.z)
 		rl.DrawMesh(client.assets.cube_mesh, client.assets.tile_materials[tile], transform)
 	}

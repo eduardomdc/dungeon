@@ -1,14 +1,14 @@
 package server
 import steam "../../ext/steamworks"
 import "core:time"
-import "../core"
+import game "../game"
 
 S : ^Server
 SERVER_TICK_RATE :: 20 // Hz
 SERVER_TICK_PERIOD : time.Duration : 1000*time.Millisecond/SERVER_TICK_RATE // ms
 
 Server :: struct {
-	world_state : core.WorldState,
+	world_state : game.WorldState,
 	connections : map[steam.HSteamNetConnection]ClientConnection,
 	network_tick : time.Time,
 	poll_group : steam.HSteamNetPollGroup,

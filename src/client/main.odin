@@ -3,7 +3,7 @@ import rl "vendor:raylib"
 import "core:math/linalg"
 import steam "../../ext/steamworks"
 import "core:c"
-import "../core"
+import "../game"
 import "core:fmt"
 import "core:time"
 
@@ -11,9 +11,9 @@ RES : [2]c.int : {1280, 720}
 FPS :: 120
 
 Client :: struct {
-	world_state : core.WorldState,
+	world_state : game.WorldState,
 	assets : Assets,
-	player_id : core.PlayerID,
+	player_id : game.PlayerID,
 	steam_id : steam.CSteamID,
 	camera : rl.Camera3D,
 	server_connection : steam.HSteamNetConnection,
@@ -31,7 +31,7 @@ main :: proc () {
 	rl.SetTargetFPS(FPS)
 	load_assets(C)
 	init_camera(C)
-	core.core_init(&C.world_state)
+	game.game_init(&C.world_state)
 	C.last_frame_time = time.now()
 	for ; !rl.WindowShouldClose() ; {
 		now := time.now()
@@ -41,7 +41,7 @@ main :: proc () {
 		poll_msgs(C)
 		input(C)
 		render(C^)
-		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[core.player_idx(C.player_id)].position
+		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[game.player_idx(C.player_id)].position
 	}
 	steam.Shutdown()
 }
@@ -59,25 +59,25 @@ init_camera :: proc (client : ^Client) {
 input :: proc (client : ^Client) {
 	dir := get_directional_input()
 	frame_dt := u16(time.duration_milliseconds(client.dt))
-	input_msg := core.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
+	input_msg := game.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
 	if dir != {} do send_msg(client, input_msg)
-	inputs := [1]core.PlayerInput{ {client.player_id, input_msg} }
+	inputs := [1]game.PlayerInput{ {client.player_id, input_msg} }
 	// simulate
-	core.state_update(&client.world_state, inputs[:])
+	game.state_update(&client.world_state, inputs[:])
 }
 
-get_directional_input :: proc () -> (dir : core.Vec2){
-	if rl.IsKeyDown(.W)	do dir += core.Vec2{0,1}
-	if rl.IsKeyDown(.S) do dir += core.Vec2{0,-1}
-	if rl.IsKeyDown(.A) do dir += core.Vec2{-1,0}
-	if rl.IsKeyDown(.D) do dir += core.Vec2{1,0}
+get_directional_input :: proc () -> (dir : game.Vec2){
+	if rl.IsKeyDown(.W)	do dir += game.Vec2{0,1}
+	if rl.IsKeyDown(.S) do dir += game.Vec2{0,-1}
+	if rl.IsKeyDown(.A) do dir += game.Vec2{-1,0}
+	if rl.IsKeyDown(.D) do dir += game.Vec2{1,0}
 	if dir != {} do dir = linalg.normalize(dir)
 	return
 }
 
-send_msg :: proc (client : ^Client, msg : core.Msg) {
+send_msg :: proc (client : ^Client, msg : game.Msg) {
 	if !client.connected_to_server do return
-	serialized, err := core.serialize_msg(msg, context.allocator); defer delete(serialized)
+	serialized, err := game.serialize_msg(msg, context.allocator); defer delete(serialized)
 	if err != nil do panic(fmt.tprint("Msg serialization error :", err))
 	steam.NetworkingSockets_SendMessageToConnection(steam.NetworkingSockets_SteamAPI(), client.server_connection, raw_data(serialized), u32(len(serialized)), steam.nSteamNetworkingSend_Unreliable, nil)
 }
@@ -92,19 +92,19 @@ poll_msgs :: proc (client : ^Client) {
 		defer steam.NetworkingMessage_t_Release(message)
 		data_ptr := cast([^]u8)message^.pData
         data := data_ptr[:message^.cbSize]
-		msg, err := core.deserialize_msg(data, context.temp_allocator)
+		msg, err := game.deserialize_msg(data, context.temp_allocator)
 		if err != nil {fmt.println("Failed to deserialize msg"); continue}
 		handle_msg(client, msg)
 	}
 }
 
-handle_msg :: proc (client : ^Client, msg : core.Msg) {
+handle_msg :: proc (client : ^Client, msg : game.Msg) {
 	switch m in msg {
-	case core.MsgPlayerInput:
-	case core.MsgGameState:
+	case game.MsgPlayerInput:
+	case game.MsgGameState:
 		client.world_state.game_state = m.state
-	case core.MsgPlayerJoined:
-	case core.MsgClientHandshake:
+	case game.MsgPlayerJoined:
+	case game.MsgClientHandshake:
 		client.player_id = m.player_id
 	}
 }

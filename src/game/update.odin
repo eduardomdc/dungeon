@@ -1,4 +1,4 @@
-package core
+package game
 import box "vendor:box3d"
 
 // game_state_update :: proc (game_state, player_inputs) -> events
@@ -17,7 +17,7 @@ state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
 }
 
 // testing map init
-core_init :: proc (state : ^WorldState) {
+game_init :: proc (state : ^WorldState) {
 	pworld := box.DefaultWorldDef()
 	state.physics_world.world_id = box.CreateWorld(pworld)
 

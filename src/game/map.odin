@@ -1,4 +1,4 @@
-package core
+package game
 
 import "vendor:box3d"
 

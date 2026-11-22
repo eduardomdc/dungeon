@@ -1,4 +1,4 @@
-package core
+package game
 import b3d "vendor:box3d"
 
 Vec :: f32
