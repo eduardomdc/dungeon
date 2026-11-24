@@ -11,7 +11,7 @@ Server :: struct {
 	world_state : game.WorldState,
 	connections : map[steam.HSteamNetConnection]ClientConnection,
 	network_tick : time.Time,
-	tick: u32,
+	tick: game.Seq,
 	poll_group : steam.HSteamNetPollGroup,
 	listen_socket: steam.HSteamListenSocket
 }

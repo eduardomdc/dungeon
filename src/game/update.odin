@@ -27,7 +27,7 @@ game_init :: proc (state : ^WorldState) {
 	gm := &state.game_map
 	for x:MapVec = 0; x < 20; x+=1 {
 		for y:MapVec = 0; y < 20; y+=1 {
-			tile := Tile{{x,y,0}, .BasicBlock}
+			tile := Tile{{x,y,0}, .StoneBricks}
 			add_tile(gm, tile)
 		}
 	}

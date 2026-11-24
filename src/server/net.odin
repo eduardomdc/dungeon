@@ -7,6 +7,7 @@ import "core:fmt"
 ClientConnection :: struct {
 	steam_id : steam.CSteamID,
 	player_id : game.PlayerID,
+	last_input_sequence: game.Seq,
 }
 
 network_init :: proc (server : ^Server) {
@@ -41,6 +42,7 @@ handle_msg :: proc (server : ^Server, msg : game.Msg, steam_connection : steam.H
 	client := &server.connections[steam_connection]
 	switch m in msg {
 	case game.MsgPlayerInput:
+		client.last_input_sequence = m.sequence
 		return game.PlayerInput{client.player_id, m}
 	case game.MsgGameState, game.MsgPlayerJoined, game.MsgClientHandshake:
 	}

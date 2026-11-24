@@ -73,7 +73,7 @@ steam_callbacks :: proc(server : ^Server) {
 				steam_id := steam.NetworkingIdentity_GetSteamID(&info.identityRemote)
 				player_id := game.create_player(&server.world_state)
 				if player_id == 0 do break // max players
-				server.connections[event.hConn] = {steam_id, player_id}
+				server.connections[event.hConn] = {steam_id, player_id, 0}
 				steam.NetworkingSockets_SetConnectionPollGroup(steam.NetworkingSockets_SteamAPI(), event.hConn, server.poll_group)
 				send_reliable_msg(server, game.MsgClientHandshake{player_id}, event.hConn)	
 				broadcast_reliable_msg(server, game.MsgPlayerJoined{steam_id, player_id})

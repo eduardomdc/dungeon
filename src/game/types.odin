@@ -4,6 +4,7 @@ import b3d "vendor:box3d"
 Vec :: f32
 Vec2 :: [2]Vec
 Vec3 :: [3]Vec
+Seq :: distinct u32
 vec3_to_f64 :: proc (v : Vec3) -> [3]f64 {return {f64(v.x),f64(v.y),f64(v.z)}}
 MAX_PLAYERS :: 6
 

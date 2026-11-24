@@ -20,6 +20,7 @@ Msg :: union {
 }
 
 MsgPlayerInput :: struct {
+	sequence: Seq,
 	duration_msec : u16,
 	input_dir: Vec2,
 	looking: Vec3,
@@ -37,7 +38,7 @@ PlayerInput :: struct {
 }
 
 MsgGameState :: struct {
-	tick: u32,
+	tick: Seq,
 	state: GameState,
 }
 

@@ -8,13 +8,14 @@ import "core:fmt"
 import "core:time"
 
 RES : [2]c.int : {1280, 720}
-FPS :: 120
+FPS :: 60
 
 Client :: struct {
 	world_state : game.WorldState,
-	last_server_tick: u32,
+	last_server_tick: game.Seq,
 	assets : Assets,
 	player_id : game.PlayerID,
+	input_sequence: game.Seq,
 	steam_id : steam.CSteamID,
 	camera : rl.Camera3D,
 	server_connection : steam.HSteamNetConnection,
@@ -45,8 +46,8 @@ main :: proc () {
 		inputs : []game.PlayerInput = {input}
 		// simulate
 		game.state_update(&C.world_state, inputs, f32(time.duration_seconds(C.dt)))
-		render(C^)
 		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[game.player_idx(C.player_id)].position
+		render(C^)
 	}
 	steam.Shutdown()
 }
@@ -63,14 +64,13 @@ init_camera :: proc (client : ^Client) {
 
 input :: proc (client : ^Client) -> game.PlayerInput {
 	dir := get_directional_input()
-	
-	input_msg : game.MsgPlayerInput
-	input_msg.input_dir = dir
+	input_msg := game.MsgPlayerInput{input_dir = dir}
 	if rl.IsKeyDown(.SPACE) do input_msg.buttons += {.JUMP}
 	if input_msg == {} do return {}
-	
 	frame_dt := u16(time.duration_milliseconds(client.dt))
 	input_msg.duration_msec = frame_dt
+	client.input_sequence += 1
+	input_msg.sequence = client.input_sequence
 	send_msg(client, input_msg)
 	pi := game.PlayerInput{ client.player_id, input_msg }
 	return pi
