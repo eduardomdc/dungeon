@@ -24,6 +24,7 @@ GameState :: struct {
 Player :: struct {
 	id : PlayerID,
 	position : Vec3,
+	velocity: Vec3,
 }
 
 PhysicsWorld :: struct {
@@ -33,7 +34,6 @@ PhysicsWorld :: struct {
 
 PlayerPhysics :: struct {
 	id : PlayerID,
-	velocity : Vec3,
 	grounded: bool,
 }
 

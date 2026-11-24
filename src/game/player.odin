@@ -13,32 +13,34 @@ create_player :: proc (world : ^WorldState) -> PlayerID {
 	}
 	if free_id == 0 do return 0 // no free slot, max players reached
 	
-	player := Player{free_id, {5,5,4}}
+	player := Player{free_id, {5,5,4}, {0,0,0}}
 	world.game_state.players[player_idx(free_id)] = player
-	world.physics_world.player_physics[player_idx(free_id)] = PlayerPhysics{free_id, {0,0,0}, false}
+	world.physics_world.player_physics[player_idx(free_id)] = PlayerPhysics{free_id, false}
 
 	return free_id
 }
 
 player_input_accelerate :: proc (world : ^WorldState, input : PlayerInput) {
-	player_physics := &world.physics_world.player_physics[player_idx(input.player_id)]
+	idx := player_idx(input.player_id)
+	player := &world.game_state.players[idx]
+	player_physics := &world.physics_world.player_physics[idx]
 	GROUNDED_PLAYER_ACC :: 10000
 	AIRBORNE_PLAYER_ACC :: 10
 	inputxy := (player_physics.grounded ? GROUNDED_PLAYER_ACC : AIRBORNE_PLAYER_ACC)*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
 	input_dir : Vec3 = {inputxy.x, inputxy.y, 0}
-	player_physics.velocity += input_dir
+	player.velocity += input_dir
 
 	JUMP_FORCE :: 1
 	if player_physics.grounded && .JUMP in input.msg.buttons {
-		player_physics.velocity.z += JUMP_FORCE
+		player.velocity.z += JUMP_FORCE
 	}
 }
 
-player_calculate_movement :: proc (player : ^PlayerPhysics, dt : f32) -> (translation : Vec3) {	
-	if !player.grounded {
+player_calculate_movement :: proc (player : ^Player, grounded: bool, dt : f32) -> (translation : Vec3) {
+	if !grounded {
 		player.velocity = apply_gravity(player.velocity, dt)
 	}
-	if player.grounded do player.velocity = apply_friction(player.velocity, dt)
+	if grounded do player.velocity = apply_friction(player.velocity, dt)
 	player.velocity = max_velocity(player.velocity)
 	
 	return player.velocity * dt
@@ -108,12 +110,12 @@ move_and_slide :: proc (world : ^WorldState, player_id : PlayerID, translation :
 	// Clip the persistent velocity, not this frame's displacement. Otherwise the
 	// next update keeps trying to move into the wall and repeatedly pushes against it.
 	physics := &world.physics_world.player_physics[player_idx(player_id)]
-	physics.velocity = box.ClipVector(physics.velocity, raw_data(plane_ctx.planes[:]), c.int(plane_ctx.count))
+	player.velocity = box.ClipVector(player.velocity, raw_data(plane_ctx.planes[:]), c.int(plane_ctx.count))
 	physics.grounded = false
 	for i in 0..<plane_ctx.count {
 		if plane_ctx.planes[i].plane.normal.z > STANDABLE_GROUND_NORMAL_Z {
 			physics.grounded = true
-			if physics.velocity.z < 0 do physics.velocity.z = 0
+			if player.velocity.z < 0 do player.velocity.z = 0
 			break
 		}
 	}

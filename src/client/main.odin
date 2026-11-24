@@ -115,6 +115,11 @@ handle_msg :: proc (client : ^Client, msg : game.Msg) {
 		if m.tick > client.last_server_tick {
 			client.last_server_tick = m.tick
 			client.world_state.game_state = m.state
+			for player in m.state.players {
+				if player.id == 0 do continue
+				physics := &client.world_state.physics_world.player_physics[game.player_idx(player.id)]
+				physics.id = player.id
+			}
 		} else do fmt.println("Received out of order msg tick", m.tick, "vs server", client.last_server_tick)
 	case game.MsgPlayerJoined:
 	case game.MsgClientHandshake:

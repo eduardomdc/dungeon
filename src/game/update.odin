@@ -14,7 +14,8 @@ state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput, dt : f
 	}
 	for &player in state.game_state.players {
 		if player.id == 0 do continue
-		translation := player_calculate_movement(&state.physics_world.player_physics[player_idx(player.id)], dt)
+		physics := &state.physics_world.player_physics[player_idx(player.id)]
+		translation := player_calculate_movement(&player, physics.grounded, dt)
 		move_and_slide(state, player.id, translation)
 	}
 }
