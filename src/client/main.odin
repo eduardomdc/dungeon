@@ -28,6 +28,7 @@ C : ^Client
 main :: proc () {
 	C = new(Client); defer free(C)
 	start_steamworks(C)
+	rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.MSAA_4X_HINT})
 	rl.InitWindow(RES.x, RES.y, "Dungeon")
 	rl.SetTargetFPS(FPS)
 	load_assets(C)
