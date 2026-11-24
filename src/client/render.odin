@@ -9,7 +9,7 @@ render :: proc (client : Client) {
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.BLACK)
 	rl.DrawFPS(2, 2)
-	rl.BeginMode3D(client.camera)
+	rl.BeginMode3D(client.camera_rig.camera)
 		for player in client.world_state.game_state.players {
 			if player.id == 0 do continue
 			rl.DrawCapsule(player.position, player.position + {0,0,game.PLAYER_CAPSULE_HEIGHT}, game.PLAYER_CAPSULE_RADIUS, 10, 10, PLAYER_COLORS[game.player_idx(player.id)])

@@ -30,7 +30,7 @@ player_input_accelerate :: proc (world : ^WorldState, input : PlayerInput) {
 	input_dir : Vec3 = {inputxy.x, inputxy.y, 0}
 	player.velocity += input_dir
 
-	JUMP_FORCE :: 1
+	JUMP_FORCE :: 3
 	if player_physics.grounded && .JUMP in input.msg.buttons {
 		player.velocity.z += JUMP_FORCE
 	}

@@ -17,7 +17,7 @@ Client :: struct {
 	player_id : game.PlayerID,
 	input_sequence: game.Seq,
 	steam_id : steam.CSteamID,
-	camera : rl.Camera3D,
+	camera_rig: CameraRig,
 	server_connection : steam.HSteamNetConnection,
 	connected_to_server : bool,
 	last_frame_time : time.Time,
@@ -33,7 +33,7 @@ main :: proc () {
 	rl.InitWindow(RES.x, RES.y, "Dungeon")
 	rl.SetTargetFPS(FPS)
 	load_assets(C)
-	init_camera(C)
+	camera_init(&C.camera_rig)
 	game.game_init(&C.world_state)
 	C.last_frame_time = time.now()
 	for ; !rl.WindowShouldClose() ; {
@@ -46,20 +46,14 @@ main :: proc () {
 		inputs : []game.PlayerInput = {input}
 		// simulate
 		game.state_update(&C.world_state, inputs, f32(time.duration_seconds(C.dt)))
-		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[game.player_idx(C.player_id)].position
+		target := C.camera_rig.camera.target
+		if C.player_id != 0 {
+			target = C.world_state.game_state.players[game.player_idx(C.player_id)].position
+		}
+		camera_update(&C.camera_rig, target, f32(time.duration_seconds(C.dt)))
 		render(C^)
 	}
 	steam.Shutdown()
-}
-
-init_camera :: proc (client : ^Client) {
-	client.camera = rl.Camera3D{
-		position = {10, 10, 10},
-		target = {0, 0, 0},
-		up = {0, 0, 1},
-		fovy = 45,
-		projection = .PERSPECTIVE,
-	}
 }
 
 input :: proc (client : ^Client) -> game.PlayerInput {
