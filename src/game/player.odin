@@ -22,17 +22,23 @@ create_player :: proc (world : ^WorldState) -> PlayerID {
 
 player_input_accelerate :: proc (world : ^WorldState, input : PlayerInput) {
 	player_physics := &world.physics_world.player_physics[player_idx(input.player_id)]
-	PLAYER_ACC :: 10000
-	inputxy := PLAYER_ACC*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
+	GROUNDED_PLAYER_ACC :: 10000
+	AIRBORNE_PLAYER_ACC :: 10
+	inputxy := (player_physics.grounded ? GROUNDED_PLAYER_ACC : AIRBORNE_PLAYER_ACC)*f32(input.msg.duration_msec)/1000 * input.msg.input_dir
 	input_dir : Vec3 = {inputxy.x, inputxy.y, 0}
 	player_physics.velocity += input_dir
+
+	JUMP_FORCE :: 1
+	if player_physics.grounded && .JUMP in input.msg.buttons {
+		player_physics.velocity.z += JUMP_FORCE
+	}
 }
 
 player_calculate_movement :: proc (player : ^PlayerPhysics, dt : f32) -> (translation : Vec3) {	
 	if !player.grounded {
 		player.velocity = apply_gravity(player.velocity, dt)
 	}
-	player.velocity = apply_friction(player.velocity, dt)
+	if player.grounded do player.velocity = apply_friction(player.velocity, dt)
 	player.velocity = max_velocity(player.velocity)
 	
 	return player.velocity * dt

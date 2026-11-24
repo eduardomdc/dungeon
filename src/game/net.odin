@@ -23,7 +23,13 @@ MsgPlayerInput :: struct {
 	duration_msec : u16,
 	input_dir: Vec2,
 	looking: Vec3,
+	buttons : PressedButtons,
 }
+
+Button :: enum u8 {
+	JUMP,
+}
+PressedButtons :: bit_set[Button]
 
 PlayerInput :: struct {
 	player_id : PlayerID,

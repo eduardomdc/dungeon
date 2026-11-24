@@ -62,9 +62,14 @@ init_camera :: proc (client : ^Client) {
 
 input :: proc (client : ^Client) -> game.PlayerInput {
 	dir := get_directional_input()
+	
+	input_msg : game.MsgPlayerInput
+	input_msg.input_dir = dir
+	if rl.IsKeyDown(.SPACE) do input_msg.buttons += {.JUMP}
+	if input_msg == {} do return {}
+	
 	frame_dt := u16(time.duration_milliseconds(client.dt))
-	input_msg := game.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
-	if input_msg.input_dir == {} do return {}
+	input_msg.duration_msec = frame_dt
 	send_msg(client, input_msg)
 	pi := game.PlayerInput{ client.player_id, input_msg }
 	return pi
