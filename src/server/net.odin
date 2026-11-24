@@ -20,6 +20,7 @@ network_tick :: proc (server : ^Server) {
 	MAX_MSGS :: 256
 	messages: [MAX_MSGS]^steam.SteamNetworkingMessage
 	msg_count := steam.NetworkingSockets_ReceiveMessagesOnPollGroup(steam.NetworkingSockets_SteamAPI(), server.poll_group, &messages[0], MAX_MSGS)
+	inputs := make([dynamic]game.PlayerInput, context.temp_allocator)
 	for i in 0..<msg_count {
 		message := messages[i]
 		defer steam.NetworkingMessage_t_Release(message)
@@ -27,21 +28,23 @@ network_tick :: proc (server : ^Server) {
         data := data_ptr[:message^.cbSize]
 		msg, err := game.deserialize_msg(data, context.temp_allocator)
 		if err != nil {fmt.println("Failed to deserialize msg"); continue}
-		handle_msg(server, msg, message.conn)
+		input := handle_msg(server, msg, message.conn)
+		if input != {} do append(&inputs, input)
 	} // need to do it again if count == MAX_MSGS
-	
-	broadcast_msg(server, game.MsgGameState{server.world_state.game_state})
+	game.state_update(&server.world_state, inputs[:], f32(time.duration_seconds(SERVER_TICK_PERIOD)))
+	server.tick += 1
+	broadcast_msg(server, game.MsgGameState{server.tick, server.world_state.game_state})
 }
 
-handle_msg :: proc (server : ^Server, msg : game.Msg, steam_connection : steam.HSteamNetConnection) {
-	inputs := make([dynamic]game.PlayerInput, context.temp_allocator)
-	client := server.connections[steam_connection]
+@require_results
+handle_msg :: proc (server : ^Server, msg : game.Msg, steam_connection : steam.HSteamNetConnection) -> game.PlayerInput {
+	client := &server.connections[steam_connection]
 	switch m in msg {
 	case game.MsgPlayerInput:
-		append(&inputs, game.PlayerInput{client.player_id, m})
+		return game.PlayerInput{client.player_id, m}
 	case game.MsgGameState, game.MsgPlayerJoined, game.MsgClientHandshake:
 	}
-	game.state_update(&server.world_state, inputs[:])
+	return {}
 }
 
 broadcast_msg :: proc (server : ^Server, msg : game.Msg) {

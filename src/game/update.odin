@@ -7,10 +7,15 @@ import box "vendor:box3d"
 // events need unique ids so clients dont replicate duplicated events ?
 // actually lets test client ignores events that are related to their character (start attack) but doesnt ignore or tries to
 // predict authorative events (player takes damage, other player starts attack)
-state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput) {
+state_update :: proc (state : ^WorldState, player_inputs : []PlayerInput, dt : f32) {
 	for input in player_inputs {
 		if input.player_id == 0 do continue
-		move_player(state, input.player_id, input)
+		player_input_accelerate(state, input)
+	}
+	for &player in state.game_state.players {
+		if player.id == 0 do continue
+		translation := player_calculate_movement(&state.physics_world.player_physics[player_idx(player.id)], dt)
+		move_and_slide(state, player.id, translation)
 	}
 }
 

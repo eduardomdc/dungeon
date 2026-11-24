@@ -12,6 +12,7 @@ FPS :: 120
 
 Client :: struct {
 	world_state : game.WorldState,
+	last_server_tick: u32,
 	assets : Assets,
 	player_id : game.PlayerID,
 	steam_id : steam.CSteamID,
@@ -39,7 +40,10 @@ main :: proc () {
 		C.last_frame_time = now
 		steam_callbacks(C)
 		poll_msgs(C)
-		input(C)
+		input := input(C)
+		inputs : []game.PlayerInput = {input}
+		// simulate
+		game.state_update(&C.world_state, inputs, f32(time.duration_seconds(C.dt)))
 		render(C^)
 		if C.player_id != 0 do C.camera.target = C.world_state.game_state.players[game.player_idx(C.player_id)].position
 	}
@@ -56,14 +60,14 @@ init_camera :: proc (client : ^Client) {
 	}
 }
 
-input :: proc (client : ^Client) {
+input :: proc (client : ^Client) -> game.PlayerInput {
 	dir := get_directional_input()
 	frame_dt := u16(time.duration_milliseconds(client.dt))
 	input_msg := game.MsgPlayerInput{duration_msec = frame_dt, input_dir=dir}
-	if dir != {} do send_msg(client, input_msg)
-	inputs := [1]game.PlayerInput{ {client.player_id, input_msg} }
-	// simulate
-	game.state_update(&client.world_state, inputs[:])
+	if input_msg.input_dir == {} do return {}
+	send_msg(client, input_msg)
+	pi := game.PlayerInput{ client.player_id, input_msg }
+	return pi
 }
 
 get_directional_input :: proc () -> (dir : game.Vec2){
@@ -102,7 +106,10 @@ handle_msg :: proc (client : ^Client, msg : game.Msg) {
 	switch m in msg {
 	case game.MsgPlayerInput:
 	case game.MsgGameState:
-		client.world_state.game_state = m.state
+		if m.tick > client.last_server_tick {
+			client.last_server_tick = m.tick
+			client.world_state.game_state = m.state
+		} else do fmt.println("Received out of order msg tick", m.tick, "vs server", client.last_server_tick)
 	case game.MsgPlayerJoined:
 	case game.MsgClientHandshake:
 		client.player_id = m.player_id

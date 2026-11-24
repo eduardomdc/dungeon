@@ -27,12 +27,12 @@ Player :: struct {
 
 PhysicsWorld :: struct {
 	id : b3d.WorldId,
-	player_phiscs : [MAX_PLAYERS]PlayerPhysics,
+	player_physics : [MAX_PLAYERS]PlayerPhysics,
 }
 
 PlayerPhysics :: struct {
 	id : PlayerID,
-	body_id : b3d.BodyId,
+	velocity : Vec3,
 }
 
 WorldState :: struct {

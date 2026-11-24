@@ -31,6 +31,7 @@ PlayerInput :: struct {
 }
 
 MsgGameState :: struct {
+	tick: u32,
 	state: GameState,
 }
 

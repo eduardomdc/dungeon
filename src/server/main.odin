@@ -5,12 +5,13 @@ import game "../game"
 
 S : ^Server
 SERVER_TICK_RATE :: 20 // Hz
-SERVER_TICK_PERIOD : time.Duration : 1000*time.Millisecond/SERVER_TICK_RATE // ms
+SERVER_TICK_PERIOD : time.Duration : time.Second/SERVER_TICK_RATE // ms
 
 Server :: struct {
 	world_state : game.WorldState,
 	connections : map[steam.HSteamNetConnection]ClientConnection,
 	network_tick : time.Time,
+	tick: u32,
 	poll_group : steam.HSteamNetPollGroup,
 	listen_socket: steam.HSteamListenSocket
 }
