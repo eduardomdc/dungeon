@@ -15,7 +15,7 @@ create_player :: proc (world : ^WorldState) -> PlayerID {
 	
 	player := Player{free_id, {5,5,4}}
 	world.game_state.players[player_idx(free_id)] = player
-	world.physics_world.player_physics[player_idx(free_id)] = PlayerPhysics{free_id, {0,0,0}}
+	world.physics_world.player_physics[player_idx(free_id)] = PlayerPhysics{free_id, {0,0,0}, false}
 
 	return free_id
 }
@@ -29,7 +29,9 @@ player_input_accelerate :: proc (world : ^WorldState, input : PlayerInput) {
 }
 
 player_calculate_movement :: proc (player : ^PlayerPhysics, dt : f32) -> (translation : Vec3) {	
-	//player.velocity = apply_gravity(player.velocity, dt)
+	if !player.grounded {
+		player.velocity = apply_gravity(player.velocity, dt)
+	}
 	player.velocity = apply_friction(player.velocity, dt)
 	player.velocity = max_velocity(player.velocity)
 	
@@ -75,11 +77,19 @@ move_and_slide :: proc (world : ^WorldState, player_id : PlayerID, translation :
 		planes: [MAX_PLANES]box.CollisionPlane,
 		count:  int,
 	}
+
+	STANDABLE_GROUND_NORMAL_Z :: 0.7
+
 	plane_callback :: proc "c" (shape_id: box.ShapeId, planes: [^]box.PlaneResult, plane_count: c.int, ctx: rawptr) -> bool {
 		pctx := (^PlaneCtx)(ctx)
 		for i in 0 ..< int(plane_count) {
 			if pctx.count >= MAX_PLANES do break
-			pctx.planes[pctx.count] = box.CollisionPlane{plane=planes[i].plane, pushLimit=10000, push=1, clipVelocity = true}
+			pctx.planes[pctx.count] = box.CollisionPlane{
+				plane=planes[i].plane,
+				pushLimit=10000,
+				push=1,
+				clipVelocity=planes[i].plane.normal.z < STANDABLE_GROUND_NORMAL_Z,
+			}
 			pctx.count += 1
 		}
 		return true
@@ -93,4 +103,12 @@ move_and_slide :: proc (world : ^WorldState, player_id : PlayerID, translation :
 	// next update keeps trying to move into the wall and repeatedly pushes against it.
 	physics := &world.physics_world.player_physics[player_idx(player_id)]
 	physics.velocity = box.ClipVector(physics.velocity, raw_data(plane_ctx.planes[:]), c.int(plane_ctx.count))
+	physics.grounded = false
+	for i in 0..<plane_ctx.count {
+		if plane_ctx.planes[i].plane.normal.z > STANDABLE_GROUND_NORMAL_Z {
+			physics.grounded = true
+			if physics.velocity.z < 0 do physics.velocity.z = 0
+			break
+		}
+	}
 }

@@ -33,6 +33,7 @@ PhysicsWorld :: struct {
 PlayerPhysics :: struct {
 	id : PlayerID,
 	velocity : Vec3,
+	grounded: bool,
 }
 
 WorldState :: struct {
